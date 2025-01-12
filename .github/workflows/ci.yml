@@ -1,0 +1,37 @@
+name: CI
+
+# When should this run?
+on:
+  push:
+    branches: [ dev ]  # Runs on pushes to dev
+  pull_request:
+    branches: [ main, dev ]  # Runs on PRs to main or dev
+
+# What jobs should run?
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Use Ubuntu as environment
+
+    steps:
+    # Step 1: Get the code
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # Step 2: Setup Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'yarn'
+    
+    # Step 3: Install dependencies
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      
+    # Step 4: Run lint
+    - name: Lint
+      run: yarn lint
+      
+    # Step 5: Try to build
+    - name: Build
+      run: yarn build
