@@ -1,4 +1,4 @@
-# V53 Tier 2 Team 20 Project
+# Schedulicious
 
  The Menu Scheduler is a manual scheduling tool that enables managers to create and share weekly menus with staff. It simplifies communication by providing clear meal plans and accounting for dietary restrictions and allergies.
 
