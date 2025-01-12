@@ -19,6 +19,50 @@ yarn install
 ```bash
 yarn dev
 ```
+## 📖 Development Guide
+
+### Git Workflow
+
+**Branch Structure:**
+```
+main ← release PR ← dev ← PR ← feature/bug branches
+```
+
+**Steps:**
+1. Create branch from `dev`
+```bash
+git checkout dev
+git pull origin dev
+git checkout -b feature/your-feature
+```
+
+2. Push changes & create PR to `dev`
+```bash
+git push origin feature/your-feature
+```
+
+3. After PR approval & merge:
+   - Delete feature branch
+   - Changes go to `main` via release PRs
+
+### Commit Messages
+Format: `[type]: message`
+
+Types:
+- `feat`: New features
+- `fix`: Bug fixes
+- `docs`: Documentation
+- `style`: Formatting
+- `refactor`: Code restructuring
+- `test`: Tests
+- `chore`: Maintenance
+
+Examples:
+```bash
+feat: add calendar component
+fix: resolve date picker bug
+docs: update setup guide
+```
 
 ## Our Team
 
