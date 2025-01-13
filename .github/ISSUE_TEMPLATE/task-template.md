@@ -1,17 +1,18 @@
 ---
-name: Task template
-about: Tasks are small units of work that can be completed in a single sprint
-title: ''
+name: Task
+about: Create a technical task
+title: '[Task] '
 labels: task
 assignees: ''
-
 ---
 
-**__Task Description__**
-Describe the task to be completed.
+## Task Description
+[Clear description of the technical task]
 
-**__Technical Considerations__**
-Include any technical considerations including architecture (e.g. API), required libraries, etc.
+## Technical Requirements
+- [ ] Requirement 1
+- [ ] Requirement 2
 
-**__Additional Considerations__**
-Any supplemental information including unresolved questions, links to external resources, screenshots, etc.
+## Related User Story
+Part of User Story #[story-number]
+
