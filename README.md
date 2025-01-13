@@ -36,6 +36,7 @@ coding!
 
 - Chloe Zhou #1: [GitHub](https://github.com/xyzhou-projects) / [LinkedIn](https://www.linkedin.com/in/xyzhou-developer)
 - Nurul Mukhlisa #2: [GitHub](https://github.com/numulaa) / [LinkedIn](https://www.linkedin.com/in/nurul-mukhlisa/)
+- Gary Lei #3: [GitHub](https://github.com/xsymmetry9) / [LinkedIn](https://www.linkedin.com/in/gary-lei/)
 
   ...
 
