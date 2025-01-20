@@ -1,6 +1,6 @@
 import React from 'react';
 
-function App() {
+const App: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-100 p-8">
             <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl">
@@ -16,6 +16,6 @@ function App() {
             </div>
         </div>
     );
-}
+};
 
 export default App;
