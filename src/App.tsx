@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '@/components/ui/button';
 
 const App: React.FC = () => {
     return (
@@ -9,9 +10,14 @@ const App: React.FC = () => {
                     <p className="text-blue-500 hover:text-blue-700 cursor-pointer">
                         This text should be blue and change on hover
                     </p>
-                    <button className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                        Test Button
-                    </button>
+                    <Button variant="default" size="sm">
+                        Default Button
+                    </Button>
+                    <span className="p-2">
+                        <Button variant="secondary" size="lg" className="text-blue-600 text-lg">
+                            Secondary Button
+                        </Button>
+                    </span>
                 </div>
             </div>
         </div>
