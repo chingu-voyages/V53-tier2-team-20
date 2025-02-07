@@ -28,10 +28,14 @@ jobs:
     - name: Install dependencies
       run: yarn install --frozen-lockfile
       
-    # Step 4: Run lint
+    # Step 4: Type check
+    - name: Type check
+      run: yarn type-check
+
+    # Step 5: Run lint
     - name: Lint
       run: yarn lint
       
-    # Step 5: Try to build
+    # Step 6: Try to build
     - name: Build
       run: yarn build

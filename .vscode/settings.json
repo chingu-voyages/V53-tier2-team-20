@@ -4,7 +4,14 @@
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": "explicit"
     },
-    "eslint.validate": ["javascript", "javascriptreact"],
+    "eslint.validate": [
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact"
+    ],
     "eslint.enable": true,
-    "eslint.run": "onType"
+    "eslint.run": "onType",
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true
 }
