@@ -39,3 +39,11 @@ jobs:
     # Step 6: Try to build
     - name: Build
       run: yarn build
+
+      # Add Lighthouse CI steps
+    - name: Run Lighthouse CI
+      run: |
+        yarn add @lhci/cli
+        yarn lighthouse
+    env:
+      LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
