@@ -1,8 +1,8 @@
 // Allergy types
-export interface Allergy {
-    id: string;
+export interface AllergyItem {
+    id: number;
     name: string;
-    createdAt: Date;
+    initial: string;
 }
 
 // Menu types
