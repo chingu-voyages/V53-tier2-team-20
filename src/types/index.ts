@@ -11,3 +11,10 @@ export interface MenuItem {
     name: string;
     createdAt: Date;
 }
+
+export interface Dish {
+    id: number;
+    name: string;
+    ingredients: string[];
+    calories: number;
+}
