@@ -20,6 +20,17 @@ function NavBar() {
                         Home
                     </Link>
                     <Link
+                        to="/dishes"
+                        className={cn(
+                            'text-sm font-medium transition-colors hover:text-primary',
+                            location.pathname === '/dishes'
+                                ? 'text-primary'
+                                : 'text-muted-foreground'
+                        )}
+                    >
+                        Dishes
+                    </Link>
+                    <Link
                         to="/allergies"
                         className={cn(
                             'text-sm font-medium transition-colors hover:text-primary',

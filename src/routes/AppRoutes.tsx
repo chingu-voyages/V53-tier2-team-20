@@ -3,12 +3,14 @@ import Layout from '@/layout/Layout';
 import MenuScheduler from '@/pages/MenuScheduler';
 import Allergies from '@/pages/Allergies';
 import NotFound from '@/pages/NotFound';
+import Dishes from '@/pages/Dishes';
 
 const AppRoutes = () => {
     return (
         <Routes>
             <Route path="/" element={<Layout />}>
                 <Route index element={<MenuScheduler />} />
+                <Route path="/dishes" element={<Dishes />} />
                 <Route path="/allergies" element={<Allergies />} />
             </Route>
 
