@@ -54,12 +54,15 @@ function AllergyList() {
     };
 
     const saveEdit = () => {
-        console.log('save edit', editingName.trim());
         const trimmedName = editingName.trim();
-        if (trimmedName === '') return;
+        if (trimmedName === '') {
+            setErrorMessage('Allergy name cannot be empty');
+            return;
+        }
 
         const isDuplicate = allergies.some(
-            (allergy) => allergy.name.toLowerCase() === trimmedName.toLowerCase()
+            (allergy) =>
+                allergy.id !== editingId && allergy.name.toLowerCase() === trimmedName.toLowerCase()
         );
 
         if (isDuplicate) {
@@ -69,27 +72,34 @@ function AllergyList() {
 
         setAllergies(
             allergies.map((allergy) =>
-                allergy.id === editingId ? { ...allergy, name: editingName } : allergy
+                allergy.id === editingId
+                    ? {
+                          ...allergy,
+                          name: trimmedName,
+                          initial: trimmedName.charAt(0).toUpperCase(),
+                      }
+                    : allergy
             )
         );
-        // reset
-        cancelEdit();
-    };
 
-    const cancelEdit = () => {
-        console.log('cancel edit');
         setEditingId(null);
         setEditingName('');
         setErrorMessage('');
     };
 
-    // const handleBlur = () => {
-    //     setTimeout(() => {
-    //         if (!isSaving) {
-    //             cancelEdit();
-    //         }
-    //     }, 0);
-    // };
+    const cancelEdit = () => {
+        setEditingId(null);
+        setEditingName('');
+        setErrorMessage('');
+    };
+
+    const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        // Check if the related target is one of the edit buttons
+        const isEditButton = e.relatedTarget?.closest('button');
+        if (!isEditButton) {
+            cancelEdit();
+        }
+    };
 
     return (
         <Card className="w-full max-w-2xl border-0 bg-gray-50">
@@ -140,6 +150,7 @@ function AllergyList() {
                                     autoFocus
                                     onChange={(e) => setEditingName(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && saveEdit()}
+                                    onBlur={handleBlur}
                                 />
                             ) : (
                                 <span className="text-sm text-gray-600">{allergy.name}</span>
