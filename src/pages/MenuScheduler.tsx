@@ -1,7 +1,9 @@
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
+import { getMonday, getNextSunday, getUpcomingMonday } from '@/lib/utils';
 import { useState } from 'react';
 // import { MenuItem } from '@/types';
 
@@ -58,7 +60,8 @@ const mockMenu: Record<string, MenuItem> = {
 };
 
 function MenuPage() {
-    const [date, setDate] = useState<Date | undefined>(new Date());
+    const [date, setDate] = useState<Date | undefined>(getUpcomingMonday());
+
     return (
         <div className="container p-6">
             <div className="flex flex-col lg:flex-row gap-6">
@@ -71,13 +74,18 @@ function MenuPage() {
                                     date
                                         ? {
                                               from: date,
-                                              to: new Date(
-                                                  date.getTime() + 6 * 24 * 60 * 60 * 1000
-                                              ),
+                                              to: getNextSunday(date),
                                           }
                                         : undefined
                                 }
-                                onSelect={(range) => setDate(range?.from)}
+                                onSelect={(_, triggerDate) => {
+                                    if (triggerDate) {
+                                        setDate(getMonday(triggerDate));
+                                    }
+                                }}
+                                disabled={{
+                                    before: getUpcomingMonday(),
+                                }}
                                 numberOfMonths={1}
                             />
                         </CardContent>
