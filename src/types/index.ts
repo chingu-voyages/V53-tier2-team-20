@@ -7,14 +7,11 @@ export interface AllergyItem {
 
 // Menu types
 export interface MenuItem {
-    id: string;
-    name: string;
-    createdAt: Date;
-}
-
-export interface Dish {
     id: number;
     name: string;
     ingredients: string[];
     calories: number;
+    image?: string;
 }
+
+export type Dish = MenuItem;
