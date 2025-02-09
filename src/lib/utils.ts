@@ -27,9 +27,8 @@ export const getNextSunday = (monday: Date): Date => {
 export const getMonday = (triggerDate: Date): Date => {
     // Use the actual clicked date from triggerDate
     const selectedDate = new Date(triggerDate);
-    const today = new Date();
     const day = selectedDate.getDay(); // 0-6
-    console.log('User clicked date:', selectedDate.toLocaleDateString());
+    // console.log('User clicked date:', selectedDate.toLocaleDateString());
     // Calculate how many days to go backwards
     // If Sunday (0), go back 6 days
     // If Monday (1), go back 0 days
