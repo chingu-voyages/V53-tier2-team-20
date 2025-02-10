@@ -89,6 +89,8 @@ function MenuPage() {
 
     console.log(JSON.stringify(dishes, null, 2));
 
+    console.log(availableDishes);
+
     useEffect(() => {
         fetchDishes();
     }, [fetchDishes]);
