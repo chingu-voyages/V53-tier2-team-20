@@ -1,3 +1,4 @@
+import { DayAssignment, Dish, MenuGenerationResult, WeeklyMenu } from '@/types';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -38,4 +39,32 @@ export const getMonday = (triggerDate: Date): Date => {
     const monday = new Date(selectedDate);
     monday.setDate(selectedDate.getDate() - daysToSubtract);
     return monday;
+};
+
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+// Hint: Math.random() and array length will be useful here
+export const getRandomDish = (availableDishes: Dish[]): Dish => {
+    const randomIndex = Math.floor(Math.random() * availableDishes.length);
+    return availableDishes[randomIndex];
+};
+
+export const assignDishToDay = (day: string, dish: Dish): DayAssignment => {
+    return { day, dish };
+};
+
+export const generateWeeklyMenu = (dishes: Dish[]): MenuGenerationResult => {
+    const availableDishes = [...dishes];
+
+    const menu: WeeklyMenu = DAYS_OF_WEEK.map((day) => {
+        const dish = getRandomDish(availableDishes);
+        // Remove the selected dish here
+        availableDishes.splice(availableDishes.indexOf(dish), 1);
+        return assignDishToDay(day, dish);
+    });
+
+    return {
+        menu,
+        remainingDishes: availableDishes,
+    };
 };

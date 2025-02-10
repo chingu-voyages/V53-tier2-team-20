@@ -23,7 +23,12 @@ export const useDishesStore = create<DishState>()(
                         throw new Error('Failed to fetch dishes');
                     }
                     const data = (await response.json()) as Dish[]; // Await the JSON response and assert the type
-                    set({ dishes: data, error: null });
+                    // Add IDs to dishes
+                    const dishesWithIds = data.map((dish, index) => ({
+                        ...dish,
+                        id: index + 1,
+                    }));
+                    set({ dishes: dishesWithIds, error: null });
                 } catch (err) {
                     set({ error: err instanceof Error ? err.message : 'An error occured' });
                 } finally {

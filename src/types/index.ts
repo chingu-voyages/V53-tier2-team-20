@@ -6,7 +6,7 @@ export interface AllergyItem {
 }
 
 // Menu types
-export interface MenuItem {
+export interface Dish {
     id: number;
     name: string;
     ingredients: string[];
@@ -14,4 +14,15 @@ export interface MenuItem {
     image?: string;
 }
 
-export type Dish = MenuItem;
+export type DayAssignment = {
+    day: string;
+    dish?: Dish;
+    isDayOff?: boolean;
+};
+
+export type WeeklyMenu = DayAssignment[];
+
+export type MenuGenerationResult = {
+    menu: WeeklyMenu;
+    remainingDishes: Dish[];
+};
