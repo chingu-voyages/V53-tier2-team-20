@@ -1,65 +1,46 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { getRecommendedDishes } from '@/lib/utils';
 import { Dish } from '@/types';
+import { useEffect, useState } from 'react';
 
 interface DishRecommendationModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSelect: (dish: Dish) => void;
-    // currentDish: Dish;
+    availableDishes: Dish[];
 }
-
-const recommendedDishes: Dish[] = [
-    {
-        id: 1,
-        name: 'Grilled Chicken Salad',
-        calories: 350,
-        ingredients: ['Chicken', 'Lettuce', 'Tomato', 'Cucumber'],
-        image: '/placeholder.svg',
-    },
-    {
-        id: 2,
-        name: 'Quinoa Bowl',
-        calories: 400,
-        ingredients: ['Quinoa', 'Avocado', 'Black Beans', 'Corn'],
-        image: '/placeholder.svg',
-    },
-    {
-        id: 3,
-        name: 'Salmon with Roasted Vegetables',
-        calories: 450,
-        ingredients: ['Salmon', 'Broccoli', 'Carrots', 'Olive Oil'],
-        image: '/placeholder.svg',
-    },
-    {
-        id: 4,
-        name: 'Vegetarian Pasta Primavera',
-        calories: 380,
-        ingredients: ['Pasta', 'Zucchini', 'Bell Peppers', 'Parmesan'],
-        image: '/placeholder.svg',
-    },
-    {
-        id: 5,
-        name: 'Teriyaki Tofu Stir-Fry',
-        calories: 320,
-        ingredients: ['Tofu', 'Broccoli', 'Carrots', 'Teriyaki Sauce'],
-        image: '/placeholder.svg',
-    },
-];
 
 export default function DishRecommendationModal({
     isOpen,
     onClose,
     onSelect,
-    // currentDish,
+    availableDishes,
 }: DishRecommendationModalProps) {
+    const [recommendedDishes, setRecommendedDishes] = useState<Dish[]>([]);
+
+    useEffect(() => {
+        if (isOpen) {
+            setRecommendedDishes(getRecommendedDishes(availableDishes));
+        }
+    }, [isOpen, availableDishes]);
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
                     <DialogTitle>Recommended Replacements</DialogTitle>
+                    <DialogDescription>
+                        Select a dish to replace the current menu item
+                    </DialogDescription>
                 </DialogHeader>
                 <ScrollArea className="h-[400px] pr-4">
                     <div className="space-y-4">

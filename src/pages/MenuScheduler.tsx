@@ -2,15 +2,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-    generateWeeklyMenu,
-    getMonday,
-    getNextSunday,
-    getSafeDishes,
-    getUpcomingMonday,
-} from '@/lib/utils';
+import { generateWeeklyMenu, getMonday, getNextSunday, getUpcomingMonday } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import { Dish, WeeklyMenu } from '@/types';
+import { DayOfWeek, Dish, WeeklyMenu } from '@/types';
 import { useDishesStore } from '@/store/dishStore';
 import { useAllergyStore } from '@/store/allergyStore';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -19,52 +13,56 @@ import DishRecommendationModal from './DishRecommendationModal';
 
 function MenuPage() {
     const [date, setDate] = useState<Date | undefined>(getUpcomingMonday());
-    const [menu, setWeeklyMenu] = useState<WeeklyMenu>([]);
+    const [menu, setWeeklyMenu] = useState<WeeklyMenu>({
+        Monday: { isDayOff: false },
+        Tuesday: { isDayOff: false },
+        Wednesday: { isDayOff: false },
+        Thursday: { isDayOff: false },
+        Friday: { isDayOff: false },
+        Saturday: { isDayOff: false },
+        Sunday: { isDayOff: false },
+    });
     const [availableDishes, setAvaialbleDishes] = useState<Dish[]>([]);
     const [errorMessage, setErrorMessage] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedDay, setSelectedDay] = useState<string | null>(null);
+    const [selectedDay, setSelectedDay] = useState<DayOfWeek | null>(null);
+    const [isMenuGenerated, setIsMenuGenerated] = useState(false);
 
     const { dishes, isLoading, error: dishError, fetchDishes } = useDishesStore();
     const { allergies } = useAllergyStore();
 
     const toggleDayOff = () => {};
 
-    const openRecommendationModal = (day: string) => {
+    const openRecommendationModal = (day: DayOfWeek) => {
         setSelectedDay(day);
         setIsModalOpen(true);
     };
 
-    const handleDishSelect = (dish: Dish) => {};
+    const handleDishSelect = (dish: Dish) => {
+        if (!selectedDay) return;
 
-    console.log(`----------------------`);
-    console.log('Debug Info:');
-    console.log(`Total Dishes: ${dishes.length}`);
-    const safeDishesCount = getSafeDishes(dishes.slice(0, 4), allergies).length;
-    console.log(`Safe Dishes Count: ${safeDishesCount}`);
-    console.log(
-        'Allergies:',
-        allergies.map((a) => a.name)
-    );
-    console.log(
-        'Filtered Out Dishes:',
-        dishes
-            .filter((dish) =>
-                dish.ingredients.some((ingredient) =>
-                    allergies.some((allergy) =>
-                        ingredient.toLowerCase().includes(allergy.name.toLowerCase())
-                    )
-                )
-            )
-            .map((d) => ({
-                name: d.name,
-                ingredients: d.ingredients,
-            }))
-    );
+        const newMenu: WeeklyMenu = { ...menu };
+        const oldDish = newMenu[selectedDay].dish;
+        newMenu[selectedDay] = { ...newMenu[selectedDay], dish };
+        setWeeklyMenu(newMenu);
 
-    console.log(`----------------------`);
-    console.log(availableDishes);
-    console.log(selectedDay);
+        //update avaialbe dishes
+        const newAvailableDishes = [...availableDishes];
+        // Remove selected dish
+        const selectedIndex = newAvailableDishes.findIndex((d) => d.id === dish.id);
+        if (selectedIndex !== -1) {
+            newAvailableDishes.splice(selectedIndex, 1);
+        }
+        // Add back old dish if existed
+        if (oldDish) {
+            newAvailableDishes.push(oldDish);
+        }
+        setAvaialbleDishes(newAvailableDishes);
+
+        // Reset states
+        setIsModalOpen(false);
+        setSelectedDay(null);
+    };
 
     useEffect(() => {
         fetchDishes();
@@ -89,6 +87,7 @@ function MenuPage() {
             const { menu, remainingDishes } = generateWeeklyMenu(dishes, allergies);
             setWeeklyMenu(menu);
             setAvaialbleDishes(remainingDishes);
+            setIsMenuGenerated(true);
         } catch (err) {
             setErrorMessage(err instanceof Error ? err.message : 'Failed to generate menu');
         }
@@ -139,59 +138,70 @@ function MenuPage() {
                 </div>
                 <Card className="flex-1  border-0 bg-gray-50">
                     <CardContent className="p-6 rounded-lg">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {menu.map(({ day, dish }) => (
-                                <div key={day} className="bg-white rounded-lg shadow-sm p-4">
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <Badge
-                                                variant="secondary"
-                                                className="bg-[#FFF5ED] text-black hover:bg-[#FFF5ED]"
-                                            >
-                                                {day}
-                                            </Badge>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm text-muted-foreground">
-                                                    {dish?.calories} cal
-                                                </span>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-6 w-6 p-0.5"
-                                                    onClick={toggleDayOff}
+                        {isMenuGenerated && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                {Object.entries(menu).map(([day, dayAssignment]) => (
+                                    <div key={day} className="bg-white rounded-lg shadow-sm p-4">
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <Badge
+                                                    variant="secondary"
+                                                    className="bg-[#FFF5ED] text-black hover:bg-[#FFF5ED]"
                                                 >
-                                                    <X className="h-4 w-4" />
-                                                </Button>
-                                            </div>
-                                        </div>
-                                        <div
-                                            onClick={() => openRecommendationModal(day)}
-                                            className="cursor-pointer space-y-3 transition-all duration-200 hover:scale-105"
-                                        >
-                                            <h3 className="font-semibold">{dish?.name}</h3>
-                                            <div className="relative rounded-lg aspect-[4/3] overflow-hidden">
-                                                <img
-                                                    src={dish?.image || '/menu-placeholder.jpg'}
-                                                    alt={dish?.name}
-                                                    className="object-cover"
-                                                />
-                                            </div>
-                                            <div className="flex flex-wrap gap-2">
-                                                {dish?.ingredients.map((ingredient) => (
-                                                    <Badge
-                                                        key={ingredient}
-                                                        variant="outline"
-                                                        className="bg-white text-xs font-normal"
+                                                    {day}
+                                                </Badge>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm text-muted-foreground">
+                                                        {dayAssignment.dish?.calories} cal
+                                                    </span>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-6 w-6 p-0.5"
+                                                        onClick={toggleDayOff}
                                                     >
-                                                        {ingredient}
-                                                    </Badge>
-                                                ))}
+                                                        <X className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                            <div
+                                                onClick={() =>
+                                                    openRecommendationModal(day as DayOfWeek)
+                                                }
+                                                className="cursor-pointer space-y-3 transition-all duration-200 hover:scale-105"
+                                            >
+                                                <h3 className="font-semibold">
+                                                    {dayAssignment.dish?.name}
+                                                </h3>
+                                                <div className="relative rounded-lg aspect-[4/3] overflow-hidden">
+                                                    <img
+                                                        src={
+                                                            dayAssignment.dish?.image ||
+                                                            '/menu-placeholder.jpg'
+                                                        }
+                                                        alt={dayAssignment.dish?.name}
+                                                        className="object-cover w-full h-full"
+                                                    />
+                                                </div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {dayAssignment.dish?.ingredients.map(
+                                                        (ingredient) => (
+                                                            <Badge
+                                                                key={ingredient}
+                                                                variant="outline"
+                                                                className="bg-white text-xs font-normal"
+                                                            >
+                                                                {ingredient}
+                                                            </Badge>
+                                                        )
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
@@ -200,7 +210,7 @@ function MenuPage() {
                     isOpen={isModalOpen}
                     onClose={() => setIsModalOpen(false)}
                     onSelect={handleDishSelect}
-                    // currentDish={menu.find((assignment) => assignment.day === selectedDay)?.dish}
+                    availableDishes={availableDishes}
                 />
             )}
         </div>
