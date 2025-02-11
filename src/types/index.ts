@@ -1,3 +1,5 @@
+import { DAYS_OF_WEEK } from '@/lib/constant';
+
 // Allergy types
 export interface AllergyItem {
     id: number;
@@ -15,12 +17,13 @@ export interface Dish {
 }
 
 export type DayAssignment = {
-    day: string;
     dish?: Dish;
-    isDayOff?: boolean;
+    isDayOff: boolean;
 };
 
-export type WeeklyMenu = DayAssignment[];
+export type DayOfWeek = (typeof DAYS_OF_WEEK)[number];
+
+export type WeeklyMenu = Record<DayOfWeek, DayAssignment>;
 
 export type MenuGenerationResult = {
     menu: WeeklyMenu;
