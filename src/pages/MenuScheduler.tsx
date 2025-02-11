@@ -2,103 +2,82 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
-import { generateWeeklyMenu, getMonday, getNextSunday, getUpcomingMonday } from '@/lib/utils';
+import {
+    generateWeeklyMenu,
+    getMonday,
+    getNextSunday,
+    getSafeDishes,
+    getUpcomingMonday,
+} from '@/lib/utils';
 import { useEffect, useState } from 'react';
 import { Dish, WeeklyMenu } from '@/types';
 import { useDishesStore } from '@/store/dishStore';
-
-// const mockMenu: WeeklyMenu = [
-//     {
-//         day: 'Monday',
-//         dish: {
-//             id: 1,
-//             name: 'Vegetable Stir Fry',
-//             calories: 298,
-//             ingredients: ['Vanilla', 'Bread', 'Parsley', 'Zucchini'],
-//             image: '/menu-placeholder.jpg',
-//         },
-//     },
-//     {
-//         day: 'Tuesday',
-//         dish: {
-//             id: 2,
-//             name: 'Vegetable Stir Fry',
-//             calories: 298,
-//             ingredients: ['Vanilla', 'Bread', 'Parsley', 'Zucchini'],
-//             image: '/menu-placeholder.jpg',
-//         },
-//     },
-//     {
-//         day: 'Wednesday',
-//         dish: {
-//             id: 3,
-//             name: 'Vegetable Stir Fry',
-//             calories: 298,
-//             ingredients: ['Vanilla', 'Bread', 'Parsley', 'Zucchini'],
-//             image: '/menu-placeholder.jpg',
-//         },
-//     },
-//     {
-//         day: 'Thursday',
-//         dish: {
-//             id: 4,
-//             name: 'Vegetable Stir Fry',
-//             calories: 298,
-//             ingredients: ['Vanilla', 'Bread', 'Parsley', 'Zucchini'],
-//             image: '/menu-placeholder.jpg',
-//         },
-//     },
-//     {
-//         day: 'Friday',
-//         dish: {
-//             id: 5,
-//             name: 'Vegetable Stir Fry',
-//             calories: 298,
-//             ingredients: ['Vanilla', 'Bread', 'Parsley', 'Zucchini'],
-//             image: '/menu-placeholder.jpg',
-//         },
-//     },
-//     {
-//         day: 'Saturday',
-//         dish: {
-//             id: 6,
-//             name: 'Vegetable Stir Fry',
-//             calories: 298,
-//             ingredients: ['Vanilla', 'Bread', 'Parsley', 'Zucchini'],
-//             image: '/menu-placeholder.jpg',
-//         },
-//     },
-//     {
-//         day: 'Sunday',
-//         dish: {
-//             id: 7,
-//             name: 'Vegetable Stir Fry',
-//             calories: 298,
-//             ingredients: ['Vanilla', 'Bread', 'Parsley', 'Zucchini'],
-//             image: '/menu-placeholder.jpg',
-//         },
-//     },
-// ];
+import { useAllergyStore } from '@/store/allergyStore';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 function MenuPage() {
     const [date, setDate] = useState<Date | undefined>(getUpcomingMonday());
     const [menu, setWeeklyMenu] = useState<WeeklyMenu>([]);
     const [availableDishes, setAvaialbleDishes] = useState<Dish[]>([]);
+    const [errorMessage, setErrorMessage] = useState('');
 
-    const { dishes, isLoading, error, fetchDishes } = useDishesStore();
+    const { dishes, isLoading, error: dishError, fetchDishes } = useDishesStore();
+    const { allergies } = useAllergyStore();
 
-    console.log(JSON.stringify(dishes, null, 2));
+    console.log(`----------------------`);
+    console.log('Debug Info:');
+    console.log(`Total Dishes: ${dishes.length}`);
+    const safeDishesCount = getSafeDishes(dishes.slice(0, 4), allergies).length;
+    console.log(`Safe Dishes Count: ${safeDishesCount}`);
+    console.log(
+        'Allergies:',
+        allergies.map((a) => a.name)
+    );
+    console.log(
+        'Filtered Out Dishes:',
+        dishes
+            .filter((dish) =>
+                dish.ingredients.some((ingredient) =>
+                    allergies.some((allergy) =>
+                        ingredient.toLowerCase().includes(allergy.name.toLowerCase())
+                    )
+                )
+            )
+            .map((d) => ({
+                name: d.name,
+                ingredients: d.ingredients,
+            }))
+    );
 
+    console.log(`----------------------`);
     console.log(availableDishes);
 
     useEffect(() => {
         fetchDishes();
     }, [fetchDishes]);
 
+    // Clear error when dishes or allergies change
+    useEffect(() => {
+        setErrorMessage('');
+    }, [dishes, allergies]);
+
+    useEffect(() => {
+        if (dishError) {
+            setErrorMessage(dishError);
+        }
+    }, [dishError]);
+
     const handleAutoGenerate = () => {
-        const { menu, remainingDishes } = generateWeeklyMenu(dishes);
-        setWeeklyMenu(menu);
-        setAvaialbleDishes(remainingDishes);
+        try {
+            // Clear any previous errors
+            setErrorMessage('');
+
+            const { menu, remainingDishes } = generateWeeklyMenu(dishes, allergies);
+            setWeeklyMenu(menu);
+            setAvaialbleDishes(remainingDishes);
+        } catch (err) {
+            setErrorMessage(err instanceof Error ? err.message : 'Failed to generate menu');
+        }
     };
 
     return (
@@ -133,10 +112,16 @@ function MenuPage() {
                         onClick={handleAutoGenerate}
                         className="w-full"
                         size="lg"
-                        disabled={isLoading || !!error || dishes.length < 7}
+                        disabled={isLoading || !!dishError}
                     >
                         Auto Generate Menu
                     </Button>
+                    {/* Error Message */}
+                    {errorMessage && (
+                        <Alert variant="destructive">
+                            <AlertDescription>{errorMessage}</AlertDescription>
+                        </Alert>
+                    )}
                 </div>
                 <Card className="flex-1  border-0 bg-gray-50">
                     <CardContent className="p-6 rounded-lg">

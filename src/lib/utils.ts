@@ -1,4 +1,4 @@
-import { DayAssignment, Dish, MenuGenerationResult, WeeklyMenu } from '@/types';
+import { AllergyItem, DayAssignment, Dish, MenuGenerationResult, WeeklyMenu } from '@/types';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -7,9 +7,8 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const getUpcomingMonday = (): Date => {
-    // get today's date
     const today = new Date();
-    // get today's day number (0-6)
+
     const day = today.getDay();
     //
     const daysToAdd = day === 0 ? 1 : 8 - day;
@@ -43,7 +42,6 @@ export const getMonday = (triggerDate: Date): Date => {
 
 const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-// Hint: Math.random() and array length will be useful here
 export const getRandomDish = (availableDishes: Dish[]): Dish => {
     const randomIndex = Math.floor(Math.random() * availableDishes.length);
     return availableDishes[randomIndex];
@@ -53,9 +51,27 @@ export const assignDishToDay = (day: string, dish: Dish): DayAssignment => {
     return { day, dish };
 };
 
-export const generateWeeklyMenu = (dishes: Dish[]): MenuGenerationResult => {
-    const availableDishes = [...dishes];
+export const getSafeDishes = (dishes: Dish[], allergies: AllergyItem[]): Dish[] => {
+    return dishes.filter((dish) => {
+        return !dish.ingredients.some((ingredient) =>
+            allergies.some((allergy) =>
+                ingredient.toLowerCase().includes(allergy.name.toLowerCase())
+            )
+        );
+    });
+};
 
+export const generateWeeklyMenu = (
+    dishes: Dish[],
+    allergies: AllergyItem[]
+): MenuGenerationResult => {
+    const safeDishes = getSafeDishes(dishes, allergies);
+
+    if (safeDishes.length < 7) {
+        throw new Error('Not enough safe dishes available after filtering allergens');
+    }
+
+    const availableDishes = [...safeDishes];
     const menu: WeeklyMenu = DAYS_OF_WEEK.map((day) => {
         const dish = getRandomDish(availableDishes);
         // Remove the selected dish here
