@@ -14,15 +14,28 @@ import { Dish, WeeklyMenu } from '@/types';
 import { useDishesStore } from '@/store/dishStore';
 import { useAllergyStore } from '@/store/allergyStore';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { X } from 'lucide-react';
+import DishRecommendationModal from './DishRecommendationModal';
 
 function MenuPage() {
     const [date, setDate] = useState<Date | undefined>(getUpcomingMonday());
     const [menu, setWeeklyMenu] = useState<WeeklyMenu>([]);
     const [availableDishes, setAvaialbleDishes] = useState<Dish[]>([]);
     const [errorMessage, setErrorMessage] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
     const { dishes, isLoading, error: dishError, fetchDishes } = useDishesStore();
     const { allergies } = useAllergyStore();
+
+    const toggleDayOff = () => {};
+
+    const openRecommendationModal = (day: string) => {
+        setSelectedDay(day);
+        setIsModalOpen(true);
+    };
+
+    const handleDishSelect = (dish: Dish) => {};
 
     console.log(`----------------------`);
     console.log('Debug Info:');
@@ -51,6 +64,7 @@ function MenuPage() {
 
     console.log(`----------------------`);
     console.log(availableDishes);
+    console.log(selectedDay);
 
     useEffect(() => {
         fetchDishes();
@@ -136,28 +150,43 @@ function MenuPage() {
                                             >
                                                 {day}
                                             </Badge>
-                                            <span className="text-sm text-muted-foreground">
-                                                {dish?.calories} cal
-                                            </span>
-                                        </div>
-                                        <h3 className="font-semibold">{dish?.name}</h3>
-                                        <div className="relative rounded-lg aspect-[4/3] overflow-hidden">
-                                            <img
-                                                src={dish?.image || '/menu-placeholder.jpg'}
-                                                alt={dish?.name}
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {dish?.ingredients.map((ingredient) => (
-                                                <Badge
-                                                    key={ingredient}
-                                                    variant="outline"
-                                                    className="bg-white text-xs font-normal"
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm text-muted-foreground">
+                                                    {dish?.calories} cal
+                                                </span>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-6 w-6 p-0.5"
+                                                    onClick={toggleDayOff}
                                                 >
-                                                    {ingredient}
-                                                </Badge>
-                                            ))}
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                        <div
+                                            onClick={() => openRecommendationModal(day)}
+                                            className="cursor-pointer space-y-3 transition-all duration-200 hover:scale-105"
+                                        >
+                                            <h3 className="font-semibold">{dish?.name}</h3>
+                                            <div className="relative rounded-lg aspect-[4/3] overflow-hidden">
+                                                <img
+                                                    src={dish?.image || '/menu-placeholder.jpg'}
+                                                    alt={dish?.name}
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {dish?.ingredients.map((ingredient) => (
+                                                    <Badge
+                                                        key={ingredient}
+                                                        variant="outline"
+                                                        className="bg-white text-xs font-normal"
+                                                    >
+                                                        {ingredient}
+                                                    </Badge>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -166,6 +195,14 @@ function MenuPage() {
                     </CardContent>
                 </Card>
             </div>
+            {isModalOpen && (
+                <DishRecommendationModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onSelect={handleDishSelect}
+                    // currentDish={menu.find((assignment) => assignment.day === selectedDay)?.dish}
+                />
+            )}
         </div>
     );
 }
