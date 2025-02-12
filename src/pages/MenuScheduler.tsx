@@ -1,25 +1,30 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
+    formatWeekRange,
     generateWeeklyMenu,
     getMonday,
     getNextSunday,
     getRandomDish,
     getUpcomingMonday,
+    getWeekKey,
 } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import { DayOfWeek, Dish, WeeklyMenu } from '@/types';
+import { DayOfWeek, Dish, GeneratedMenus, WeeklyMenu } from '@/types';
 import { useDishesStore } from '@/store/dishStore';
 import { useAllergyStore } from '@/store/allergyStore';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { X } from 'lucide-react';
 import DishRecommendationModal from './DishRecommendationModal';
+import { format } from 'date-fns';
 
 function MenuPage() {
-    const [date, setDate] = useState<Date | undefined>(getUpcomingMonday());
+    const [selectedWeek, setSelectedWeek] = useState<Date | undefined>(getUpcomingMonday());
+
     const [menu, setWeeklyMenu] = useState<WeeklyMenu>({
+        // Active menu
         Monday: { isDayOff: false },
         Tuesday: { isDayOff: false },
         Wednesday: { isDayOff: false },
@@ -28,6 +33,8 @@ function MenuPage() {
         Saturday: { isDayOff: false },
         Sunday: { isDayOff: false },
     });
+    // Add new state to store all generated menus
+    const [generatedMenus, setGeneratedMenus] = useState<GeneratedMenus>({});
     const [availableDishes, setAvaialbleDishes] = useState<Dish[]>([]);
     const [errorMessage, setErrorMessage] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,6 +45,8 @@ function MenuPage() {
     const { allergies } = useAllergyStore();
 
     const toggleDayOff = (day: DayOfWeek) => {
+        if (!selectedWeek) return;
+
         const newMenu = { ...menu };
         const currentDayAssignment = newMenu[day];
 
@@ -70,6 +79,11 @@ function MenuPage() {
 
         setAvaialbleDishes(newAvailableDishes);
         setWeeklyMenu(newMenu);
+        const weekKey = getWeekKey(selectedWeek);
+        setGeneratedMenus((prev) => ({
+            ...prev,
+            [weekKey]: newMenu,
+        }));
     };
 
     const openRecommendationModal = (day: DayOfWeek) => {
@@ -78,12 +92,19 @@ function MenuPage() {
     };
 
     const handleDishSelect = (dish: Dish) => {
-        if (!selectedDay) return;
+        if (!selectedDay || !selectedWeek) return;
 
         const newMenu: WeeklyMenu = { ...menu };
         const oldDish = newMenu[selectedDay].dish;
         newMenu[selectedDay] = { ...newMenu[selectedDay], dish };
+
+        // Update both active menu and cache
         setWeeklyMenu(newMenu);
+        const weekKey = getWeekKey(selectedWeek);
+        setGeneratedMenus((prev) => ({
+            ...prev,
+            [weekKey]: newMenu,
+        }));
 
         //update avaialbe dishes
         const newAvailableDishes = [...availableDishes];
@@ -104,13 +125,37 @@ function MenuPage() {
     };
 
     useEffect(() => {
+        if (selectedWeek) {
+            const weekKey = getWeekKey(selectedWeek);
+            const cachedMenu = generatedMenus[weekKey];
+
+            if (cachedMenu) {
+                setWeeklyMenu(cachedMenu);
+                setIsMenuGenerated(true);
+            } else {
+                // Reset to empty menu when no cache exists
+                setWeeklyMenu({
+                    Monday: { isDayOff: false },
+                    Tuesday: { isDayOff: false },
+                    Wednesday: { isDayOff: false },
+                    Thursday: { isDayOff: false },
+                    Friday: { isDayOff: false },
+                    Saturday: { isDayOff: false },
+                    Sunday: { isDayOff: false },
+                });
+                setIsMenuGenerated(false);
+            }
+        }
+    }, [selectedWeek, generatedMenus]);
+
+    useEffect(() => {
         fetchDishes();
     }, [fetchDishes]);
 
     // Clear error when dishes or allergies change
     useEffect(() => {
         setErrorMessage('');
-    }, [dishes, allergies]);
+    }, [dishes, allergies, selectedWeek]);
 
     useEffect(() => {
         if (dishError) {
@@ -118,12 +163,24 @@ function MenuPage() {
         }
     }, [dishError]);
 
+    const hasMenuForWeek = (date: Date) => !!generatedMenus[getWeekKey(date)];
+
     const handleAutoGenerate = () => {
         try {
             // Clear any previous errors
             setErrorMessage('');
 
+            if (!selectedWeek) {
+                throw new Error('Please select a week before generating the menu');
+            }
+
             const { menu, remainingDishes } = generateWeeklyMenu(dishes, allergies);
+            const weekKey = getWeekKey(selectedWeek);
+            // store the menu
+            setGeneratedMenus((prev) => ({
+                ...prev,
+                [weekKey]: menu,
+            }));
             setWeeklyMenu(menu);
             setAvaialbleDishes(remainingDishes);
             setIsMenuGenerated(true);
@@ -131,6 +188,8 @@ function MenuPage() {
             setErrorMessage(err instanceof Error ? err.message : 'Failed to generate menu');
         }
     };
+
+    const isButtonDisabled = isLoading || !!dishError || !selectedWeek;
 
     return (
         <div className="container p-6">
@@ -141,16 +200,16 @@ function MenuPage() {
                             <Calendar
                                 mode="range"
                                 selected={
-                                    date
+                                    selectedWeek
                                         ? {
-                                              from: date,
-                                              to: getNextSunday(date),
+                                              from: selectedWeek,
+                                              to: getNextSunday(selectedWeek),
                                           }
                                         : undefined
                                 }
                                 onSelect={(_, triggerDate) => {
                                     if (triggerDate) {
-                                        setDate(getMonday(triggerDate));
+                                        setSelectedWeek(getMonday(triggerDate));
                                     }
                                 }}
                                 disabled={{
@@ -160,14 +219,19 @@ function MenuPage() {
                             />
                         </CardContent>
                     </Card>
-                    <Button
-                        onClick={handleAutoGenerate}
-                        className="w-full"
-                        size="lg"
-                        disabled={isLoading || !!dishError}
-                    >
-                        Auto Generate Menu
-                    </Button>
+                    {selectedWeek && (
+                        <Button
+                            onClick={handleAutoGenerate}
+                            className="w-full"
+                            size="lg"
+                            disabled={isButtonDisabled}
+                        >
+                            {hasMenuForWeek(selectedWeek)
+                                ? 'Regenerate Menu'
+                                : 'Auto Generate Menu'}
+                        </Button>
+                    )}
+
                     {/* Error Message */}
                     {errorMessage && (
                         <Alert variant="destructive">
@@ -176,6 +240,20 @@ function MenuPage() {
                     )}
                 </div>
                 <Card className="flex-1  border-0 bg-gray-50">
+                    <CardHeader className="pb-0">
+                        <CardTitle>
+                            <h2 className="text-xl sm:text-2xl font-semibold">Weekly Menu</h2>
+                        </CardTitle>
+                        {selectedWeek && hasMenuForWeek(selectedWeek) && (
+                            <p
+                                className="text-muted-foreground text-sm"
+                                aria-label={`Menu for week of ${format(selectedWeek, 'MMMM d, yyyy')}`}
+                            >
+                                Menu for: {formatWeekRange(selectedWeek)}
+                            </p>
+                        )}
+                    </CardHeader>
+                    {/* Menu display logic */}
                     <CardContent className="p-6 rounded-lg">
                         {isMenuGenerated && (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
