@@ -2,6 +2,7 @@ import { AllergyItem, DayAssignment, Dish, MenuGenerationResult, WeeklyMenu } fr
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { DAYS_OF_WEEK } from './constant';
+import { format } from 'date-fns';
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -36,6 +37,12 @@ export const getMonday = (triggerDate: Date): Date => {
     monday.setDate(selectedDate.getDate() - daysToSubtract);
     return monday;
 };
+
+export const formatWeekRange = (date: Date) => {
+    return `${format(date, 'MMM d')} - ${format(getNextSunday(date), 'MMM d, yyyy')}`;
+};
+
+export const getWeekKey = (date: Date) => format(getMonday(date), 'yyyy-MM-dd');
 
 export const getRandomDish = (availableDishes: Dish[]): Dish => {
     const randomIndex = Math.floor(Math.random() * availableDishes.length);

@@ -29,3 +29,5 @@ export type MenuGenerationResult = {
     menu: WeeklyMenu;
     remainingDishes: Dish[];
 };
+
+export type GeneratedMenus = Record<string, WeeklyMenu>;
