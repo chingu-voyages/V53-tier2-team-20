@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
     formatWeekRange,
     generateWeeklyMenu,
@@ -16,9 +16,18 @@ import { DayOfWeek, Dish, GeneratedMenus, WeeklyMenu } from '@/types';
 import { useDishesStore } from '@/store/dishStore';
 import { useAllergyStore } from '@/store/allergyStore';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { X } from 'lucide-react';
+import { Download, X } from 'lucide-react';
 import DishRecommendationModal from './DishRecommendationModal';
 import { format } from 'date-fns';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 function MenuPage() {
     const [selectedWeek, setSelectedWeek] = useState<Date | undefined>(getUpcomingMonday());
@@ -43,6 +52,103 @@ function MenuPage() {
 
     const { dishes, isLoading, error: dishError, fetchDishes } = useDishesStore();
     const { allergies } = useAllergyStore();
+
+    const handleExport = (type: 'pdf' | 'excel') => {
+        if (type === 'pdf') {
+            // 1. Create new PDF document (A4 format by default)
+            const doc = new jsPDF();
+
+            // 2. Configure header
+            doc.setFontSize(20);
+            doc.text('Weekly Menu Plan', 20, 20); // x=20, y=20 position
+
+            // 3. Add week range
+            doc.setFontSize(14);
+            doc.text(`Week of ${formatWeekRange(selectedWeek as Date)}`, 20, 30);
+
+            // 4. Add menu items
+            doc.setFontSize(12);
+            let yPosition = 50; // Start position for menu items
+
+            Object.entries(menu).forEach(([day, dayMenu]) => {
+                // Day header
+                doc.setFont('helvetica', 'bold');
+                doc.text(day, 20, yPosition);
+
+                if (dayMenu.isDayOff) {
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('Day Off', 60, yPosition);
+                } else {
+                    // Dish details
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(dayMenu.dish?.name || '', 60, yPosition);
+                    doc.text(`${dayMenu.dish?.calories || 0} cal`, 150, yPosition);
+
+                    // Ingredients on next line
+                    if (dayMenu.dish?.ingredients.length) {
+                        yPosition += 7;
+                        doc.setFontSize(10);
+                        doc.text(
+                            `Ingredients: ${dayMenu.dish.ingredients.join(', ')}`,
+                            60,
+                            yPosition,
+                            {
+                                maxWidth: 130, // Wrap text if too long
+                            }
+                        );
+                        doc.setFontSize(12);
+                    }
+                }
+
+                yPosition += 20; // Space between days
+
+                // Add new page if needed
+                if (yPosition > 280) {
+                    doc.addPage();
+                    yPosition = 20;
+                }
+            });
+
+            // 5. Save the PDF
+            const fileName = `menu-${format(selectedWeek as Date, 'yyyy-MM-dd')}.pdf`;
+            doc.save(fileName);
+        } else if (type === 'excel') {
+            // 1. Prepare data as array of arrays (headers + rows)
+            const wsData = [
+                // Headers row
+                ['Day', 'Dish Name', 'Calories', 'Ingredients', 'Status'],
+
+                // Data rows
+                ...Object.entries(menu).map(([day, dayMenu]) => [
+                    day,
+                    dayMenu.isDayOff ? '' : dayMenu.dish?.name,
+                    dayMenu.isDayOff ? '' : dayMenu.dish?.calories,
+                    dayMenu.isDayOff ? '' : dayMenu.dish?.ingredients.join(', '),
+                    dayMenu.isDayOff ? 'Day Off' : 'Planned',
+                ]),
+            ];
+
+            // 2. Create worksheet from data
+            const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+            // 3. Style the worksheet (optional)
+            ws['!cols'] = [
+                { wch: 10 }, // Day column width
+                { wch: 30 }, // Dish name column width
+                { wch: 10 }, // Calories column width
+                { wch: 50 }, // Ingredients column width
+                { wch: 10 }, // Status column width
+            ];
+
+            // 4. Create workbook and append worksheet
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Weekly Menu');
+
+            // 5. Save file
+            const fileName = `menu-${format(selectedWeek as Date, 'yyyy-MM-dd')}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+        }
+    };
 
     const toggleDayOff = (day: DayOfWeek) => {
         if (!selectedWeek) return;
@@ -239,22 +345,63 @@ function MenuPage() {
                         </Alert>
                     )}
                 </div>
-                <Card className="flex-1  border-0 bg-gray-50">
-                    <CardHeader className="pb-0">
-                        <CardTitle>
-                            <h2 className="text-xl sm:text-2xl font-semibold">Weekly Menu</h2>
-                        </CardTitle>
-                        {selectedWeek && hasMenuForWeek(selectedWeek) && (
-                            <p
-                                className="text-muted-foreground text-sm"
-                                aria-label={`Menu for week of ${format(selectedWeek, 'MMMM d, yyyy')}`}
-                            >
-                                Menu for: {formatWeekRange(selectedWeek)}
-                            </p>
-                        )}
-                    </CardHeader>
-                    {/* Menu display logic */}
-                    <CardContent className="p-6 rounded-lg">
+                <Card className="flex-1 bg-gray-50">
+                    <CardContent className="p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <div>
+                                <h2 className="text-xl sm:text-2xl font-semibold">Weekly Menu</h2>
+                                {selectedWeek && hasMenuForWeek(selectedWeek) && (
+                                    <p
+                                        className="text-muted-foreground text-sm"
+                                        aria-label={`Menu for week of ${format(selectedWeek, 'MMMM d, yyyy')}`}
+                                    >
+                                        Menu for: {formatWeekRange(selectedWeek)}
+                                    </p>
+                                )}
+                            </div>
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <span>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button
+                                                        variant="outline"
+                                                        disabled={
+                                                            !selectedWeek ||
+                                                            !hasMenuForWeek(selectedWeek)
+                                                        }
+                                                    >
+                                                        <Download className="h-4 w-4" />
+                                                        Export Menu
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleExport('pdf')}
+                                                    >
+                                                        Export as PDF
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={() => handleExport('excel')}
+                                                    >
+                                                        Export as Excel
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        {!selectedWeek
+                                            ? 'Select a week first'
+                                            : !hasMenuForWeek(selectedWeek)
+                                              ? 'Generate a menu before exporting'
+                                              : 'Export your menu'}
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+                        {/* Menu display logic */}
                         {isMenuGenerated && (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 {Object.entries(menu).map(([day, dayAssignment]) => (
