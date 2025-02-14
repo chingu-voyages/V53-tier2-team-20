@@ -1,161 +1,44 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-    formatWeekRange,
-    generateWeeklyMenu,
-    getMonday,
-    getNextSunday,
-    getRandomDish,
-    getUpcomingMonday,
-    getWeekKey,
-} from '@/lib/utils';
+import { formatWeekRange, generateWeeklyMenu, getRandomDish, getWeekKey } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import { DayOfWeek, Dish, GeneratedMenus, WeeklyMenu } from '@/types';
+import { DayOfWeek, Dish, WeeklyMenu } from '@/types';
 import { useDishesStore } from '@/store/dishStore';
 import { useAllergyStore } from '@/store/allergyStore';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Download, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import DishRecommendationModal from './DishRecommendationModal';
 import { format } from 'date-fns';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useMenuStore } from '@/store/menuStore';
+import { useErrorStore } from '@/store/errorStore';
+import CalendarSection from '@/pages/CalendarSection';
+import MenuExport from './MenuExport';
 
 function MenuPage() {
-    const [selectedWeek, setSelectedWeek] = useState<Date | undefined>(getUpcomingMonday());
-
-    const [menu, setWeeklyMenu] = useState<WeeklyMenu>({
-        // Active menu
-        Monday: { isDayOff: false },
-        Tuesday: { isDayOff: false },
-        Wednesday: { isDayOff: false },
-        Thursday: { isDayOff: false },
-        Friday: { isDayOff: false },
-        Saturday: { isDayOff: false },
-        Sunday: { isDayOff: false },
-    });
-    // Add new state to store all generated menus
-    const [generatedMenus, setGeneratedMenus] = useState<GeneratedMenus>({});
-    const [availableDishes, setAvaialbleDishes] = useState<Dish[]>([]);
-    const [errorMessage, setErrorMessage] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedDay, setSelectedDay] = useState<DayOfWeek | null>(null);
-    const [isMenuGenerated, setIsMenuGenerated] = useState(false);
 
+    const {
+        selectedWeek,
+        menu,
+        setMenu: setWeeklyMenu,
+        generatedMenus,
+        updateGeneratedMenu,
+        isMenuGenerated,
+        setIsMenuGenerated,
+        availableDishes,
+        setAvailableDishes,
+        selectedDay,
+        setSelectedDay,
+    } = useMenuStore();
+    const { setErrorMessage, clearError } = useErrorStore();
     const { dishes, isLoading, error: dishError, fetchDishes } = useDishesStore();
     const { allergies } = useAllergyStore();
-
-    const handleExport = (type: 'pdf' | 'excel') => {
-        if (type === 'pdf') {
-            // 1. Create new PDF document (A4 format by default)
-            const doc = new jsPDF();
-
-            // 2. Configure header
-            doc.setFontSize(20);
-            doc.text('Weekly Menu Plan', 20, 20); // x=20, y=20 position
-
-            // 3. Add week range
-            doc.setFontSize(14);
-            doc.text(`Week of ${formatWeekRange(selectedWeek as Date)}`, 20, 30);
-
-            // 4. Add menu items
-            doc.setFontSize(12);
-            let yPosition = 50; // Start position for menu items
-
-            Object.entries(menu).forEach(([day, dayMenu]) => {
-                // Day header
-                doc.setFont('helvetica', 'bold');
-                doc.text(day, 20, yPosition);
-
-                if (dayMenu.isDayOff) {
-                    doc.setFont('helvetica', 'normal');
-                    doc.text('Day Off', 60, yPosition);
-                } else {
-                    // Dish details
-                    doc.setFont('helvetica', 'normal');
-                    doc.text(dayMenu.dish?.name || '', 60, yPosition);
-                    doc.text(`${dayMenu.dish?.calories || 0} cal`, 150, yPosition);
-
-                    // Ingredients on next line
-                    if (dayMenu.dish?.ingredients.length) {
-                        yPosition += 7;
-                        doc.setFontSize(10);
-                        doc.text(
-                            `Ingredients: ${dayMenu.dish.ingredients.join(', ')}`,
-                            60,
-                            yPosition,
-                            {
-                                maxWidth: 130, // Wrap text if too long
-                            }
-                        );
-                        doc.setFontSize(12);
-                    }
-                }
-
-                yPosition += 20; // Space between days
-
-                // Add new page if needed
-                if (yPosition > 280) {
-                    doc.addPage();
-                    yPosition = 20;
-                }
-            });
-
-            // 5. Save the PDF
-            const fileName = `menu-${format(selectedWeek as Date, 'yyyy-MM-dd')}.pdf`;
-            doc.save(fileName);
-        } else if (type === 'excel') {
-            // 1. Prepare data as array of arrays (headers + rows)
-            const wsData = [
-                // Headers row
-                ['Day', 'Dish Name', 'Calories', 'Ingredients', 'Status'],
-
-                // Data rows
-                ...Object.entries(menu).map(([day, dayMenu]) => [
-                    day,
-                    dayMenu.isDayOff ? '' : dayMenu.dish?.name,
-                    dayMenu.isDayOff ? '' : dayMenu.dish?.calories,
-                    dayMenu.isDayOff ? '' : dayMenu.dish?.ingredients.join(', '),
-                    dayMenu.isDayOff ? 'Day Off' : 'Planned',
-                ]),
-            ];
-
-            // 2. Create worksheet from data
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-            // 3. Style the worksheet (optional)
-            ws['!cols'] = [
-                { wch: 10 }, // Day column width
-                { wch: 30 }, // Dish name column width
-                { wch: 10 }, // Calories column width
-                { wch: 50 }, // Ingredients column width
-                { wch: 10 }, // Status column width
-            ];
-
-            // 4. Create workbook and append worksheet
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Weekly Menu');
-
-            // 5. Save file
-            const fileName = `menu-${format(selectedWeek as Date, 'yyyy-MM-dd')}.xlsx`;
-            XLSX.writeFile(wb, fileName);
-        }
-    };
 
     const toggleDayOff = (day: DayOfWeek) => {
         if (!selectedWeek) return;
 
         const newMenu = { ...menu };
         const currentDayAssignment = newMenu[day];
-
         const newAvailableDishes = [...availableDishes];
 
         if (currentDayAssignment.isDayOff) {
@@ -183,13 +66,10 @@ function MenuPage() {
             }
         }
 
-        setAvaialbleDishes(newAvailableDishes);
+        setAvailableDishes(newAvailableDishes);
         setWeeklyMenu(newMenu);
         const weekKey = getWeekKey(selectedWeek);
-        setGeneratedMenus((prev) => ({
-            ...prev,
-            [weekKey]: newMenu,
-        }));
+        updateGeneratedMenu(weekKey, newMenu); // Use new method
     };
 
     const openRecommendationModal = (day: DayOfWeek) => {
@@ -207,10 +87,7 @@ function MenuPage() {
         // Update both active menu and cache
         setWeeklyMenu(newMenu);
         const weekKey = getWeekKey(selectedWeek);
-        setGeneratedMenus((prev) => ({
-            ...prev,
-            [weekKey]: newMenu,
-        }));
+        updateGeneratedMenu(weekKey, newMenu); // Use new method
 
         //update avaialbe dishes
         const newAvailableDishes = [...availableDishes];
@@ -223,58 +100,19 @@ function MenuPage() {
         if (oldDish) {
             newAvailableDishes.push(oldDish);
         }
-        setAvaialbleDishes(newAvailableDishes);
+        setAvailableDishes(newAvailableDishes);
 
         // Reset states
         setIsModalOpen(false);
         setSelectedDay(null);
     };
 
-    useEffect(() => {
-        if (selectedWeek) {
-            const weekKey = getWeekKey(selectedWeek);
-            const cachedMenu = generatedMenus[weekKey];
-
-            if (cachedMenu) {
-                setWeeklyMenu(cachedMenu);
-                setIsMenuGenerated(true);
-            } else {
-                // Reset to empty menu when no cache exists
-                setWeeklyMenu({
-                    Monday: { isDayOff: false },
-                    Tuesday: { isDayOff: false },
-                    Wednesday: { isDayOff: false },
-                    Thursday: { isDayOff: false },
-                    Friday: { isDayOff: false },
-                    Saturday: { isDayOff: false },
-                    Sunday: { isDayOff: false },
-                });
-                setIsMenuGenerated(false);
-            }
-        }
-    }, [selectedWeek, generatedMenus]);
-
-    useEffect(() => {
-        fetchDishes();
-    }, [fetchDishes]);
-
-    // Clear error when dishes or allergies change
-    useEffect(() => {
-        setErrorMessage('');
-    }, [dishes, allergies, selectedWeek]);
-
-    useEffect(() => {
-        if (dishError) {
-            setErrorMessage(dishError);
-        }
-    }, [dishError]);
-
     const hasMenuForWeek = (date: Date) => !!generatedMenus[getWeekKey(date)];
 
     const handleAutoGenerate = () => {
         try {
             // Clear any previous errors
-            setErrorMessage('');
+            clearError();
 
             if (!selectedWeek) {
                 throw new Error('Please select a week before generating the menu');
@@ -283,68 +121,83 @@ function MenuPage() {
             const { menu, remainingDishes } = generateWeeklyMenu(dishes, allergies);
             const weekKey = getWeekKey(selectedWeek);
             // store the menu
-            setGeneratedMenus((prev) => ({
-                ...prev,
-                [weekKey]: menu,
-            }));
+            updateGeneratedMenu(weekKey, menu); // Use new method
             setWeeklyMenu(menu);
-            setAvaialbleDishes(remainingDishes);
+            setAvailableDishes(remainingDishes);
             setIsMenuGenerated(true);
         } catch (err) {
             setErrorMessage(err instanceof Error ? err.message : 'Failed to generate menu');
         }
     };
 
+    useEffect(() => {
+        if (!selectedWeek || !dishes) return;
+
+        const weekKey = getWeekKey(selectedWeek);
+        const cachedMenu = generatedMenus[weekKey];
+
+        if (cachedMenu) {
+            setWeeklyMenu(cachedMenu);
+            setIsMenuGenerated(true);
+
+            // Calculate available dishes for this week
+            const usedDishes = Object.values(cachedMenu)
+                .filter((day) => !day.isDayOff && day.dish)
+                .map((day) => day.dish!);
+
+            const newAvailableDishes = dishes.filter(
+                (dish) => !usedDishes.some((usedDish) => usedDish.id === dish.id)
+            );
+
+            setAvailableDishes(newAvailableDishes);
+        } else {
+            // Reset menu and available dishes
+            setWeeklyMenu({
+                Monday: { isDayOff: false },
+                Tuesday: { isDayOff: false },
+                Wednesday: { isDayOff: false },
+                Thursday: { isDayOff: false },
+                Friday: { isDayOff: false },
+                Saturday: { isDayOff: false },
+                Sunday: { isDayOff: false },
+            });
+            setIsMenuGenerated(false);
+            setAvailableDishes([]);
+        }
+    }, [
+        selectedWeek,
+        dishes,
+        generatedMenus,
+        setWeeklyMenu,
+        setIsMenuGenerated,
+        setAvailableDishes,
+    ]);
+
+    useEffect(() => {
+        fetchDishes();
+    }, [fetchDishes]);
+
+    // Clear error when dishes or allergies change
+    useEffect(() => {
+        clearError();
+    }, [dishes, allergies, selectedWeek, clearError]);
+
+    useEffect(() => {
+        if (dishError) {
+            setErrorMessage(dishError);
+        }
+    }, [dishError, setErrorMessage]);
+
     const isButtonDisabled = isLoading || !!dishError || !selectedWeek;
 
     return (
         <div className="container p-6">
             <div className="flex flex-col lg:flex-row gap-6">
-                <div className="lg:w-[300px] space-y-4">
-                    <Card>
-                        <CardContent className="p-4">
-                            <Calendar
-                                mode="range"
-                                selected={
-                                    selectedWeek
-                                        ? {
-                                              from: selectedWeek,
-                                              to: getNextSunday(selectedWeek),
-                                          }
-                                        : undefined
-                                }
-                                onSelect={(_, triggerDate) => {
-                                    if (triggerDate) {
-                                        setSelectedWeek(getMonday(triggerDate));
-                                    }
-                                }}
-                                disabled={{
-                                    before: getUpcomingMonday(),
-                                }}
-                                numberOfMonths={1}
-                            />
-                        </CardContent>
-                    </Card>
-                    {selectedWeek && (
-                        <Button
-                            onClick={handleAutoGenerate}
-                            className="w-full"
-                            size="lg"
-                            disabled={isButtonDisabled}
-                        >
-                            {hasMenuForWeek(selectedWeek)
-                                ? 'Regenerate Menu'
-                                : 'Auto Generate Menu'}
-                        </Button>
-                    )}
-
-                    {/* Error Message */}
-                    {errorMessage && (
-                        <Alert variant="destructive">
-                            <AlertDescription>{errorMessage}</AlertDescription>
-                        </Alert>
-                    )}
-                </div>
+                <CalendarSection
+                    onAutoGenerate={handleAutoGenerate}
+                    isButtonDisabled={isButtonDisabled}
+                    hasMenuForWeek={hasMenuForWeek}
+                />
                 <Card className="flex-1 bg-gray-50">
                     <CardContent className="p-6">
                         <div className="flex justify-between items-center mb-4">
@@ -359,47 +212,11 @@ function MenuPage() {
                                     </p>
                                 )}
                             </div>
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <span>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button
-                                                        variant="outline"
-                                                        disabled={
-                                                            !selectedWeek ||
-                                                            !hasMenuForWeek(selectedWeek)
-                                                        }
-                                                    >
-                                                        <Download className="h-4 w-4" />
-                                                        Export Menu
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent>
-                                                    <DropdownMenuItem
-                                                        onClick={() => handleExport('pdf')}
-                                                    >
-                                                        Export as PDF
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        onClick={() => handleExport('excel')}
-                                                    >
-                                                        Export as Excel
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        {!selectedWeek
-                                            ? 'Select a week first'
-                                            : !hasMenuForWeek(selectedWeek)
-                                              ? 'Generate a menu before exporting'
-                                              : 'Export your menu'}
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                            <MenuExport
+                                selectedWeek={selectedWeek}
+                                hasMenuForWeek={hasMenuForWeek}
+                                menu={menu}
+                            />
                         </div>
                         {/* Menu display logic */}
                         {isMenuGenerated && (

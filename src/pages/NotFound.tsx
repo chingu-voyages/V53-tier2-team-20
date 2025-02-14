@@ -3,9 +3,6 @@ import { ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 function NotFound() {
-    // Add this to debug
-    console.log('NotFound component rendered at:', performance.now());
-
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background">
             <div className="mx-auto w-full max-w-md text-center space-y-6 px-4">

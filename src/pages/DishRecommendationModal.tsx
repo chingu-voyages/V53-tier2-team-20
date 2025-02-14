@@ -27,6 +27,7 @@ export default function DishRecommendationModal({
 }: DishRecommendationModalProps) {
     const [recommendedDishes, setRecommendedDishes] = useState<Dish[]>([]);
 
+    // console.log(`available dishes: ${availableDishes}`);
     useEffect(() => {
         if (isOpen) {
             setRecommendedDishes(getRecommendedDishes(availableDishes));
