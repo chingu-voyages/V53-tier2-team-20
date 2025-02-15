@@ -3,7 +3,7 @@
 ## Overview
 Schedulicious is a meal scheduling platform that allows managers to easily create different, allergy-conscious weekly menus for their employees. It automates scheduling, eliminating manual labour while maintaining diversity and inclusivity.
 
-![Schedulcious UI](./assets/schedulicious-ui.png)
+![Schedulcious UI](./public/schedulicious-ui.png)
 
 ## Core Features
 - **Automated Weekly Menu Generation**: Generates a weekly meal plan while ensuring no dish is repeated.
