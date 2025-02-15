@@ -45,7 +45,7 @@ yarn dev
 
 ### Demo
 
-If you prefer not to run the app locally, you can explore the live demo [here]().
+If you prefer not to run the app locally, you can explore the live demo [here](https://schedulicious.vercel.app/).
 
 ## Contribution Guide
 
@@ -56,3 +56,7 @@ We welcome contributions! If you’d like to contribute:
 4. Open a pull request, describing the changes you made.
 
 For major changes, please open an issue first to discuss your ideas.
+
+## Our Team
+- **Chloe Zhou** (Developer): [GitHub](https://github.com/chloezhoudev) / [LinkedIn](https://www.linkedin.com/in/xyzhou-developer)
+- **Nurul Mukhlisa** (UI/UX Designer): [GitHub](https://github.com/numulaa) / [LinkedIn](https://www.linkedin.com/in/nurul-mukhlisa/)
