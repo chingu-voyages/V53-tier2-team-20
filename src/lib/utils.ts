@@ -165,7 +165,7 @@ export const exportToPDF = async (selectedWeek: Date, menu: WeeklyMenu) => {
 };
 
 export const exportToExcel = async (selectedWeek: Date, menu: WeeklyMenu) => {
-    const XLSX = await import('xlsx');
+    const XLSX = await import('./xlsxWrapper');
 
     // 1. Prepare data as array of arrays (headers + rows)
     const wsData = [
@@ -200,5 +200,5 @@ export const exportToExcel = async (selectedWeek: Date, menu: WeeklyMenu) => {
 
     // 5. Save file
     const fileName = `menu-${format(selectedWeek as Date, 'yyyy-MM-dd')}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    XLSX.writeFileXLSX(wb, fileName);
 };
