@@ -1,115 +1,58 @@
 # Schedulicious
 
- The Menu Scheduler is a manual scheduling tool that enables managers to create and share weekly menus with staff. It simplifies communication by providing clear meal plans and accounting for dietary restrictions and allergies.
+## Overview
+Schedulicious is a meal scheduling platform that allows managers to easily create different, allergy-conscious weekly menus for their employees. It automates scheduling, eliminating manual labour while maintaining diversity and inclusivity.
 
-## 🚀 Getting Started
+![Schedulcious UI](./public/schedulicious-ui.png)
+
+## Core Features
+- **Automated Weekly Menu Generation**: Generates a weekly meal plan while ensuring no dish is repeated.
+- **Manual Swap**: Easily swap meals for any day to adjust the schedule as needed.
+- **Allergy-Aware Planning**: Automatically filters out dishes containing allergens based on saved user preferences.
+- **Day Off Feature**: Mark specific days as non-working to exclude them from meal scheduling.
+- **Export Options**: Download the meal plan as a PDF or Excel file for easy sharing.
+- **Intuitive and Clean UI**: Designed for a seamless user experience with a clear and simple interface.
+
+## Tech Stack
+Schedulicious is built with the following technologies:
+- **Frontend**: React, TypeScript
+- **Routing**: React Router
+- **State Management**: Zustand
+- **UI Components**: ShadCN
+- **Styling**: Tailwind CSS
+- **Deployment**: Vercel
+
+
+## Installation & Running Guide
 
 ### Prerequisites
 - Node.js (v18 or higher)
 - Yarn
 
-### Development
+### Getting Started
 
-#### Install Dependencies
+1. Install Dependencies
 ```bash
 yarn install
 ```
 
-#### Start Development Server
+2. Start Development Server
 ```bash
 yarn dev
 ```
-## 📖 Development Guide
+3. Open in Browser
+- Visit http://localhost:3000 in your browser to view the app.
 
-### Git Workflow
+### Demo
 
-**Branch Structure:**
-```
-main ← release PR ← dev ← PR ← feature/bug branches
-```
+If you prefer not to run the app locally, you can explore the live demo [here]().
 
-**Steps:**
-1. Create branch from `dev`
-```bash
-git checkout dev
-git pull origin dev
-git checkout -b feature/your-feature
-```
+## Contribution Guide
 
-2. Push changes & create PR to `dev`
-```bash
-git push origin feature/your-feature
-```
+We welcome contributions! If you’d like to contribute:
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Make your changes and commit them.
+4. Open a pull request, describing the changes you made.
 
-3. After PR approval & merge:
-   - Delete feature branch
-   - Changes go to `main` via release PRs
-
-### Commit Messages
-Format: `[type]: message`
-
-Types:
-- `feat`: New features
-- `fix`: Bug fixes
-- `docs`: Documentation
-- `style`: Formatting
-- `refactor`: Code restructuring
-- `test`: Tests
-- `chore`: Maintenance
-
-Examples:
-```bash
-feat: add calendar component
-fix: resolve date picker bug
-docs: update setup guide
-```
-
-## Our Team
-
-- Chloe Zhou #1: [GitHub](https://github.com/xyzhou-projects) / [LinkedIn](https://www.linkedin.com/in/xyzhou-developer)
-- Nurul Mukhlisa #2: [GitHub](https://github.com/numulaa) / [LinkedIn](https://www.linkedin.com/in/nurul-mukhlisa/)
-
-  ...
-
-- Teammate name #n: [GitHub](https://github.com/ghaccountname) / [LinkedIn](https://linkedin.com/in/liaccountname)
-
----
-## Original Documentation
-
-Your project's `readme` is as important to success as your code. For
-this reason you should put as much care into its creation and maintenance
-as you would any other component of the application.
-
-If you are unsure of what should go into the `readme` let this article,
-written by an experienced Chingu, be your starting point -
-[Keys to a well written README](https://tinyurl.com/yk3wubft).
-
-And before we go there's "one more thing"! Once you decide what to include
-in your `readme` feel free to replace the text we've provided here.
-
-> Own it & Make it your Own!
-
-## Team Documents
-
-You may find these helpful as you work together to organize your project.
-
-- [Team Project Ideas](./docs/team_project_ideas.md)
-- [Team Decision Log](./docs/team_decision_log.md)
-
-Meeting Agenda templates (located in the `/docs` directory in this repo):
-
-- Meeting - Voyage Kickoff --> ./docs/meeting-voyage_kickoff.docx
-- Meeting - App Vision & Feature Planning --> ./docs/meeting-vision_and_feature_planning.docx
-- Meeting - Sprint Retrospective, Review, and Planning --> ./docs/meeting-sprint_retrospective_review_and_planning.docx
-- Meeting - Sprint Open Topic Session --> ./docs/meeting-sprint_open_topic_session.docx
-
-## Our Team
-
-Everyone on your team should add their name along with a link to their GitHub
-& optionally their LinkedIn profiles below. Do this in Sprint #1 to validate
-your repo access and to practice PR'ing with your team _before_ you start
-coding!
-
-- Chloe Zhou #1: [GitHub](https://github.com/xyzhou-projects) / [LinkedIn](https://www.linkedin.com/in/xyzhou-developer)
-- Nurul Mukhlisa #2: [GitHub](https://github.com/numulaa) / [LinkedIn](https://www.linkedin.com/in/nurul-mukhlisa/)
-- Gary Lei #3: [GitHub](https://github.com/xsymmetry9) / [LinkedIn](https://www.linkedin.com/in/gary-lei/)
+For major changes, please open an issue first to discuss your ideas.
