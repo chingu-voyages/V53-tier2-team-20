@@ -33,8 +33,12 @@ jobs:
     # Step 5: Run lint
     - name: Lint
       run: yarn lint
+    
+    # Step 6: Run test
+    - name: Run tests
+      run: yarn test
       
-    # Step 6: Try to build
+    # Step 7: Try to build
     - name: Build
       run: yarn build
 
