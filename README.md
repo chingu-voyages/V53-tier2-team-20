@@ -1,4 +1,7 @@
-# Schedulicious
+# Schedulicious 
+
+![CI](https://github.com/chingu-voyages/V53-tier2-team-20/actions/workflows/ci.yml/badge.svg)
+![Unit Tests](https://github.com/chingu-voyages/V53-tier2-team-20/actions/workflows/test.yml/badge.svg)
 
 ## Overview
 Schedulicious is a meal scheduling platform that allows managers to easily create different, allergy-conscious weekly menus for their employees. It automates scheduling, eliminating manual labour while maintaining diversity and inclusivity.
