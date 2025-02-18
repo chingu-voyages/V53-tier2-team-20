@@ -23,5 +23,12 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,  // Enable source maps for better analysis
+    rollupOptions: {
+      external: [
+        'dompurify',
+        'html2canvas',
+        'canvg'
+      ]
+    }
   }
 })
